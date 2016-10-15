@@ -17,6 +17,7 @@
 		00B9955A1B128DF400A5C623 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B995581B128DF400A5C623 /* IOKit.framework */; };
 		00B9955B1B128DF400A5C623 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B995591B128DF400A5C623 /* IOSurface.framework */; };
 		5323E6B20EAFCA74003A9687 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B10EAFCA74003A9687 /* CoreVideo.framework */; };
+		5F3D71211DB2AD47005E6FB0 /* TileRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5F3D711F1DB2AD47005E6FB0 /* TileRenderer.cpp */; };
 		6128160EB30B4D7AA84A8DAF /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0DBAFC6AD256483FBFF7C9F0 /* CinderApp.icns */; };
 		7747CAB427FD4E68A08CDCBE /* TilesApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C2E71773634BE9B53BD208 /* TilesApp.cpp */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
@@ -40,6 +41,8 @@
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		49C2E71773634BE9B53BD208 /* TilesApp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = TilesApp.cpp; path = ../src/TilesApp.cpp; sourceTree = "<group>"; };
 		5323E6B10EAFCA74003A9687 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = /System/Library/Frameworks/CoreVideo.framework; sourceTree = "<absolute>"; };
+		5F3D711F1DB2AD47005E6FB0 /* TileRenderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TileRenderer.cpp; path = ../src/TileRenderer.cpp; sourceTree = "<group>"; };
+		5F3D71221DB2B0FA005E6FB0 /* TileRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TileRenderer.h; path = ../include/TileRenderer.h; sourceTree = "<group>"; };
 		61553F0E98784BA7B0B8F4D9 /* Tiles_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = "\"\""; path = Tiles_Prefix.pch; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Tiles.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tiles.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -76,6 +79,7 @@
 		080E96DDFE201D6D7F000001 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				5F3D711F1DB2AD47005E6FB0 /* TileRenderer.cpp */,
 				49C2E71773634BE9B53BD208 /* TilesApp.cpp */,
 			);
 			name = Source;
@@ -133,6 +137,7 @@
 			isa = PBXGroup;
 			children = (
 				1BAB0B1FC10E47AABACD6938 /* Resources.h */,
+				5F3D71221DB2B0FA005E6FB0 /* TileRenderer.h */,
 				61553F0E98784BA7B0B8F4D9 /* Tiles_Prefix.pch */,
 			);
 			name = Headers;
@@ -220,6 +225,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5F3D71211DB2AD47005E6FB0 /* TileRenderer.cpp in Sources */,
 				7747CAB427FD4E68A08CDCBE /* TilesApp.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
