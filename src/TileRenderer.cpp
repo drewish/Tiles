@@ -9,38 +9,9 @@
 #include "TileRenderer.h"
 
 using namespace ci;
-//
-//    class Tile {
-//      public:
-//        static TileRef create( const ivec2 &position ) {
-//            return TileRef( new Tile( position ) );
-//        };
-//        static TileRef create( const TileRef neighbor, const ivec2 &offset ) {
-//            return TileRef( new Tile( neighbor->position() + offset ) );
-//        };
-//
-//        Tile( const ivec2 &position ) : mPosition( position )
-//        {
-//            Rand rando = Rand( ( mPosition.x << 8 ) + mPosition.y );
-//            mValue = rando.nextUint( 16 );
-//
-//            float p = getPerlin().fBm( vec2( position ) * vec2( 0.1, 0.1 ) );
-//            mColor = Color( ci::CM_HSV, 0.5 + p, 1.0, 1.0 );
-//        }
-//
-//        const ivec2&    position() const { return mPosition; }
-//        u_int8_t        value() const { return mValue; }
-//        const ColorA&   color() const { return mColor; }
-//
-//      protected:
-//        ivec2 mPosition;
-//        u_int8_t mValue;
-//        ColorA mColor;
-//    };
-
 
 TileRenderer::TileRenderer( u_int8_t width, uint8_t height, ivec2 tileSize )
-: mXCount( width ), mYCount( height ), mOffset( 0 ), mTileSize( tileSize ), mPerlin( 8 )
+    : mXCount( width ), mYCount( height ), mOffset( 0 ), mTileSize( tileSize ), mPerlin( 8 )
 {
     for ( u_int8_t y = 0; y < mYCount; ++y ) {
         Row row;
@@ -128,36 +99,26 @@ void TileRenderer::moveLeft() {
 }
 
 void TileRenderer::draw() {
-    vec2 scaling = vec2( mTileSize ) / vec2( 2 );
+    gl::ScopedModelMatrix outter;
+    gl::translate( mOffset );
 
     u_int8_t y = 0;
     for ( const auto& row : mBoard ) {
         u_int8_t x = 0;
         for ( const auto& tile : row ) {
-            vec2 at = ( ivec2( x, y ) * mTileSize ) + mOffset;
+            gl::ScopedModelMatrix innner;
+            gl::translate( vec2( mTileSize ) * vec2( x, y ) );
 
-            gl::color( tile->color() );
-            gl::drawSolidRect( Rectf( at + vec2( -1, -1 ) * scaling, at + vec2( 1, 1 ) * scaling ) );
-
-//            gl::drawString(
-//                std::to_string(tile->position().x), at + vec2(0, -0.25) * scaling,
-//                Color( 1, 0, 0 ),
-//                Font( "Arial", 12 )
-//            );
-//            gl::drawString(
-//                std::to_string(tile->position().y), at + vec2(0, +0.25) * scaling,
-//                Color( 0, 0, 1 ),
-//                Font( "Arial", 12 )
-//            );
-//
-//            gl::color( 0, 0, 0 );
-//            // if ( ( tile->value() & 1 ) == 1 ) gl::drawLine( at, at + vec2( 0, -1) * scaling);
-//            if ( ( tile->value() & 2 ) == 2 ) gl::drawLine( at, at + vec2( 2, 0) * scaling);
-//            if ( ( tile->value() & 4 ) == 4 ) gl::drawLine( at, at + vec2( 0, 2) * scaling);
-//            // if ( ( tile->value() & 8 ) == 8 ) gl::drawLine( at, at + vec2( -1, 0) * scaling);
+            tile->draw( mTileSize );
 
             x++;
         }
         y++;
     }
+}
+
+void TileRenderer::Tile::draw( const vec2 &tileSize ) {
+    gl::color( mColor );
+    vec2 halfTile = vec2( tileSize ) / vec2( 2 );
+    gl::drawSolidRect( Rectf( -halfTile, halfTile ) );
 }

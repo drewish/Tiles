@@ -34,6 +34,8 @@ class TileRenderer {
             mColor = ci::Color( ci::CM_HSV, 0.5 + mValue, 1.0, 1.0 );
         }
 
+        void draw( const ci::vec2 &tileSize );
+
         const ci::ivec2&    position() const { return mPosition; }
         const ci::ColorA&   color() const { return mColor; }
         float               value() const { return mValue; }
@@ -64,7 +66,7 @@ class TileRenderer {
     const u_int8_t mXCount;
     const u_int8_t mYCount;
     ci::Perlin mPerlin;
-    ci::ivec2 mOffset;
+    ci::vec2 mOffset;
     Board mBoard;
 };
 
