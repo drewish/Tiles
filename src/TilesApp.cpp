@@ -1,7 +1,10 @@
 #include "cinder/app/App.h"
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
+#include "cinder/Camera.h"
+#include "cinder/CameraUi.h"
 #include "TileRenderer.h"
+#include "Vehicle.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -18,12 +21,42 @@ class TilesApp : public App {
 	void draw() override;
 
     ivec2 mLastMouse;
-
-    TileRenderer mTiles = TileRenderer( 15, 15, vec2( 50 ) );
+    CameraPersp         mViewCamera;
+    CameraUi            mViewCameraUI;
+    TileRenderer mTiles = TileRenderer( 7, 7, vec2( 100 ) );
+    Vehicle mMover;
 };
+
+
+
+ci::PolyLine2f polyLineCircle( float radius, u_int8_t subdivisions )
+{
+    ci::PolyLine2f result;
+    const ci::vec2 center( 0 );
+    // iterate the segments
+    const float tDelta = 1 / (float) subdivisions * 2.0f * M_PI;
+    float t = 0;
+    for( int s = 0; s <= subdivisions; s++ ) {
+        ci::vec2 unit( ci::math<float>::cos( t ), ci::math<float>::sin( t ) );
+        result.push_back( center + unit * radius );
+        t += tDelta;
+    }
+    result.setClosed();
+
+    return result;
+}
 
 void TilesApp::setup()
 {
+    mViewCamera.setPerspective( 80.0f, getWindowAspectRatio(), 10.0f, 4000.0f );
+    // eyePoint, target, up
+//    mViewCamera.lookAt( vec3( 200, -200, 400 ), vec3( 0, 0, 0 ), vec3( 0, 0, 1 ) );
+//    mViewCameraUI = CameraUi( &mViewCamera, getWindow() );
+//    mViewCameraUI.setMouseWheelMultiplier( 1 );
+
+    PolyLine2f circle = polyLineCircle( 300, 8 );
+    circle.offset( vec2( 300 ) );
+    mMover.setup( circle );
 }
 
 void TilesApp::mouseDown( MouseEvent event )
@@ -52,20 +85,33 @@ void TilesApp::touchesMoved( TouchEvent event )
 
 void TilesApp::update()
 {
-
+    mMover.update( 0 );
+    mTiles.move( mMover.getLastPosition() - mMover.getPosition() );
+    // eyePoint, target, up
+//    mMover.getAngle()
+//mMover.getPosition()
+    mViewCamera.lookAt( vec3( 400, -200, 400 ), vec3( 400, 200, 1), vec3( 0, 0, 1 ) );
 }
 
 void TilesApp::draw()
 {
-	gl::clear( Color::white() );
     gl::ScopedMatrices matrixScope;
+    gl::setMatrices( mViewCamera );
 
+	gl::clear( Color::gray( 0.5 ) );
+    gl::color( Color::white() );
 
-//    gl::translate( getWindowCenter() );
-    gl::translate( mTiles.tileSize() );
+    {
+        gl::ScopedMatrices matrixScope2;
+//        gl::translate(  );
+//        gl::translate( mMover.getPosition()-mTiles.boardCenter() );
+        mTiles.draw();
+    }
 
-
-    mTiles.draw();
+    {
+        gl::ScopedMatrices matrixScope3;
+        mMover.draw();
+    }
 }
 
 void prepareSettings( App::Settings *settings )

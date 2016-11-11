@@ -10,12 +10,12 @@
 
 using namespace ci;
 
-TileRenderer::TileRenderer( u_int8_t width, uint8_t height, ivec2 tileSize )
-    : mXCount( width ), mYCount( height ), mOffset( 0 ), mTileSize( tileSize ), mPerlin( 8 )
+TileRenderer::TileRenderer( u_int8_t columns, uint8_t rows, ivec2 tileSize )
+    : mColumns( columns ), mRows( rows ), mOffset( 0 ), mTileSize( tileSize ), mPerlin( 8 )
 {
-    for ( u_int8_t y = 0; y < mYCount; ++y ) {
+    for ( u_int8_t y = 0; y < mRows; ++y ) {
         Row row;
-        for ( u_int8_t x = 0; x < mXCount; ++x ) {
+        for ( u_int8_t x = 0; x < mColumns; ++x ) {
             ivec2 position = ivec2( x, y );
             row.push_back( Tile::create( position, valueFor( position ) ) );
         }
@@ -63,7 +63,7 @@ void TileRenderer::move( ivec2 adjustment ) {
 void TileRenderer::moveUp() {
     TileRef prev = mBoard.front().front();
     Row row;
-    for ( u_int8_t x = 0; x < mXCount; ++x ) {
+    for ( u_int8_t x = 0; x < mColumns; ++x ) {
         ivec2 pos = prev->position() + ivec2( x, -1 );
         row.push_back( Tile::create( pos, valueFor( pos ) ) );
     }
@@ -74,7 +74,7 @@ void TileRenderer::moveUp() {
 void TileRenderer::moveDown() {
     TileRef prev = mBoard.back().front();
     Row row;
-    for ( u_int8_t x = 0; x < mXCount; ++x ) {
+    for ( u_int8_t x = 0; x < mColumns; ++x ) {
         ivec2 pos= prev->position() + ivec2( x, +1 );
         row.push_back( Tile::create( pos, valueFor( pos ) ) );
     }
@@ -100,7 +100,8 @@ void TileRenderer::moveLeft() {
 
 void TileRenderer::draw() {
     gl::ScopedModelMatrix outter;
-    gl::translate( mOffset );
+
+//    gl::translate( mOffset );
 
     u_int8_t y = 0;
     for ( const auto& row : mBoard ) {
@@ -118,7 +119,7 @@ void TileRenderer::draw() {
 }
 
 void TileRenderer::Tile::draw( const vec2 &tileSize ) {
-    gl::color( mColor );
+    gl::ScopedColor color( mColor );
     vec2 halfTile = vec2( tileSize ) / vec2( 2 );
     gl::drawSolidRect( Rectf( -halfTile, halfTile ) );
 }
