@@ -3,6 +3,7 @@
 #include "cinder/gl/gl.h"
 #include "cinder/Camera.h"
 #include "cinder/CameraUi.h"
+#include "cinder/params/Params.h"
 #include "TileRenderer.h"
 #include "Vehicle.h"
 
@@ -12,18 +13,21 @@ using namespace std;
 
 class TilesApp : public App {
   public:
-	void setup() override;
-	void mouseDown( MouseEvent event ) override;
-	void mouseDrag( MouseEvent event ) override;
+    void setup() override;
+    void mouseDown( MouseEvent event ) override;
+    void mouseDrag( MouseEvent event ) override;
     void touchesMoved( TouchEvent event ) override;
 
-	void update() override;
-	void draw() override;
+    void update() override;
+    void draw() override;
 
+    params::InterfaceGlRef	mParams;
     ivec2 mLastMouse;
     CameraPersp         mViewCamera;
     CameraUi            mViewCameraUI;
-    TileRenderer mTiles = TileRenderer( 7, 7, vec2( 100 ) );
+    vec2 mTileSize = vec2( 100 );
+    ivec2 mBoardSize = ivec2( 7 );
+    TileRenderer mTiles;
     Vehicle mMover;
 };
 
@@ -48,6 +52,19 @@ ci::PolyLine2f polyLineCircle( float radius, u_int8_t subdivisions )
 
 void TilesApp::setup()
 {
+    // Create the interface and give it a name.
+    mParams = params::InterfaceGl::create( getWindow(), "App parameters", toPixels( ivec2( 200, 400 ) ) );
+
+    auto update = [this] { mTiles = TileRenderer( mBoardSize, mTileSize ); };
+    update();
+
+    // Setup some basic parameters.
+    mParams->addParam( "Board Width", &mBoardSize.x ).min( 1 ).max( 20 ).step( 1 ).updateFn( update );
+    mParams->addParam( "Board Height", &mBoardSize.y ).min( 1 ).max( 20 ).step( 1 ).updateFn( update );
+    mParams->addParam( "Tile Width", &mTileSize.x ).min( 20 ).max( 200 ).step( 5 ).updateFn( update );
+    mParams->addParam( "Tile Height", &mTileSize.y ).min( 20 ).max( 200 ).step( 5 ).updateFn( update );
+
+
     mViewCamera.setPerspective( 80.0f, getWindowAspectRatio(), 10.0f, 4000.0f );
     // eyePoint, target, up
 //    mViewCamera.lookAt( vec3( 200, -200, 400 ), vec3( 0, 0, 0 ), vec3( 0, 0, 1 ) );
@@ -112,6 +129,8 @@ void TilesApp::draw()
         gl::ScopedMatrices matrixScope3;
         mMover.draw();
     }
+
+    mParams->draw();
 }
 
 void prepareSettings( App::Settings *settings )

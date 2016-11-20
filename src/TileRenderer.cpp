@@ -10,8 +10,8 @@
 
 using namespace ci;
 
-TileRenderer::TileRenderer( u_int8_t columns, uint8_t rows, ivec2 tileSize )
-    : mColumns( columns ), mRows( rows ), mOffset( 0 ), mTileSize( tileSize ), mPerlin( 8 )
+TileRenderer::TileRenderer( const uvec2 &boardSize, const uvec2 &tileSize )
+    : mColumns( boardSize.x ), mRows( boardSize.y ), mOffset( 0 ), mTileSize( tileSize ), mPerlin( 8 )
 {
     for ( u_int8_t y = 0; y < mRows; ++y ) {
         Row row;
@@ -21,6 +21,26 @@ TileRenderer::TileRenderer( u_int8_t columns, uint8_t rows, ivec2 tileSize )
         }
         mBoard.push_back( row );
     }
+}
+
+TileRenderer& TileRenderer::operator=( const TileRenderer &rhs )
+{
+    mColumns = rhs.mColumns;
+    mRows = rhs.mRows;
+    mTileSize = rhs.mTileSize;
+    mPerlin = rhs.mPerlin;
+
+    mBoard.clear();
+    for ( u_int8_t y = 0; y < mRows; ++y ) {
+        Row row;
+        for ( u_int8_t x = 0; x < mColumns; ++x ) {
+            ivec2 position = ivec2( x, y );
+            row.push_back( Tile::create( position, valueFor( position ) ) );
+        }
+        mBoard.push_back( row );
+    }
+
+    return *this;
 }
 
 float TileRenderer::valueFor( const ivec2 &position )
@@ -84,16 +104,16 @@ void TileRenderer::moveDown() {
 
 void TileRenderer::moveRight() {
     for ( auto &row : mBoard ) {
-        row.pop_back();
         ivec2 pos = row.front()->position() + ivec2( -1, 0 );
+        row.pop_back();
         row.push_front( Tile::create( pos, valueFor( pos ) ) );
     }
 }
 
 void TileRenderer::moveLeft() {
     for ( auto &row : mBoard ) {
-        row.pop_front();
         ivec2 pos = row.back()->position() + ivec2( +1, 0 );
+        row.pop_front();
         row.push_back( Tile::create( pos, valueFor( pos ) ) );
     }
 }

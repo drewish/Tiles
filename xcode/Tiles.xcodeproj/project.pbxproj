@@ -86,8 +86,8 @@
 		080E96DDFE201D6D7F000001 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				5F3D711F1DB2AD47005E6FB0 /* TileRenderer.cpp */,
 				49C2E71773634BE9B53BD208 /* TilesApp.cpp */,
+				5F3D711F1DB2AD47005E6FB0 /* TileRenderer.cpp */,
 				5F3D71241DB5BFA3005E6FB0 /* Vehicle.cpp */,
 			);
 			name = Source;

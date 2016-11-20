@@ -46,10 +46,13 @@ class TileRenderer {
         float mValue;
     };
 
-    TileRenderer( u_int8_t columns, uint8_t rows, ci::ivec2 tileSize = ci::ivec2( 50 ) );
+
+    TileRenderer( const ci::uvec2 &boardSize = ci::uvec2( 1 ), const ci::uvec2 &tileSize = ci::uvec2( 50 ) );
+    TileRenderer& operator=( const TileRenderer &rhs );
 
     // Dimentions of an individual tile.
     ci::ivec2 tileSize() const { return mTileSize; }
+
     ci::ivec2 boardSize() const { return ci::ivec2( mColumns, mRows ); }
     ci::vec2 boardCenter() const { return ci::vec2( tileSize() * boardSize() ) / ci::vec2( 2 ); }
 
@@ -65,9 +68,9 @@ class TileRenderer {
 
     float valueFor( const ci::ivec2 &position );
 
-    const ci::ivec2 mTileSize;
-    const u_int8_t mColumns;
-    const u_int8_t mRows;
+    ci::ivec2 mTileSize;
+    u_int8_t mColumns;
+    u_int8_t mRows;
     ci::Perlin mPerlin;
     ci::vec2 mOffset;
     Board mBoard;
