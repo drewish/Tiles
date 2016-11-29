@@ -34,7 +34,7 @@ class TileRenderer {
             mColor = ci::Color( ci::CM_HSV, 0.5 + mValue, 1.0, 1.0 );
         }
 
-        void draw( const ci::vec2 &tileSize );
+        void draw( const ci::ivec2 &tileSize );
 
         const ci::ivec2&    position() const { return mPosition; }
         const ci::ColorA&   color() const { return mColor; }
@@ -52,11 +52,20 @@ class TileRenderer {
 
     // Dimentions of an individual tile.
     ci::ivec2 tileSize() const { return mTileSize; }
-
+    // Size of the board in tiles.
     ci::ivec2 boardSize() const { return ci::ivec2( mColumns, mRows ); }
-    ci::vec2 boardCenter() const { return ci::vec2( tileSize() * boardSize() ) / ci::vec2( 2 ); }
 
-    void move( ci::ivec2 adjustment );
+    ci::ivec2 centerOffset() const {
+        return glm::floor( ci::vec2( mColumns, mRows ) / ci::vec2( 2.0 ) );
+    }
+    ci::ivec2 centerPosition() const { return mCenteredOn; }
+    ci::ivec2 topLeftPosition() const { return mBoard.front().front()->position(); }
+    ci::ivec2 bottomLeftPosition() const { return mBoard.back().front()->position(); }
+
+    // Recreate the tiles so the board is centered over this point.
+    void jumpTo( const ci::vec2 &point );
+    // Move the center to this point creating tiles along the way.
+    void move( const ci::vec2 &to );
     void moveUp();
     void moveDown();
     void moveRight();
@@ -66,13 +75,16 @@ class TileRenderer {
 
   protected:
 
+    ci::ivec2 tilePosForPoint( const ci::vec2 &point ) const {
+        return ci::ivec2( glm::floor( point / ci::vec2( mTileSize ) ) );
+    }
     float valueFor( const ci::ivec2 &position );
 
+    ci::ivec2 mCenteredOn;
     ci::ivec2 mTileSize;
     u_int8_t mColumns;
     u_int8_t mRows;
     ci::Perlin mPerlin;
-    ci::vec2 mOffset;
     Board mBoard;
 };
 

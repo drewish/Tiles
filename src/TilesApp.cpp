@@ -17,6 +17,7 @@ class TilesApp : public App {
     void mouseDown( MouseEvent event ) override;
     void mouseDrag( MouseEvent event ) override;
     void touchesMoved( TouchEvent event ) override;
+    vec2 calcMouseOnPlane( vec2 mouse );
 
     void update() override;
     void draw() override;
@@ -31,6 +32,18 @@ class TilesApp : public App {
     Vehicle mMover;
 };
 
+vec2 TilesApp::calcMouseOnPlane( vec2 mouse )
+{
+    float u = mouse.x / (float) getWindowWidth();
+    float v = ( getWindowHeight() - mouse.y ) / (float) getWindowHeight();
+    Ray ray = mViewCamera.generateRay( u, v, mViewCamera.getAspectRatio() );
+    float distance = 0.0f;
+    if ( ! ray.calcPlaneIntersection( glm::zero<ci::vec3>(), vec3( 0, 0, 1 ), &distance ) ) {
+        return vec2( 0 );
+    }
+    vec3 intersection = ray.calcPosition( distance );
+    return vec2( intersection.x, intersection.y );
+}
 
 
 ci::PolyLine2f polyLineCircle( float radius, u_int8_t subdivisions )
@@ -67,47 +80,46 @@ void TilesApp::setup()
 
     mViewCamera.setPerspective( 80.0f, getWindowAspectRatio(), 10.0f, 4000.0f );
     // eyePoint, target, up
-//    mViewCamera.lookAt( vec3( 200, -200, 400 ), vec3( 0, 0, 0 ), vec3( 0, 0, 1 ) );
-//    mViewCameraUI = CameraUi( &mViewCamera, getWindow() );
+    mViewCamera.lookAt( vec3( 200, -200, 400 ), vec3( 0, 0, 0 ), vec3( 0, 0, 1 ) );
+    mViewCameraUI = CameraUi( &mViewCamera, getWindow() );
 //    mViewCameraUI.setMouseWheelMultiplier( 1 );
 
     PolyLine2f circle = polyLineCircle( 300, 8 );
     circle.offset( vec2( 300 ) );
     mMover.setup( circle );
+    mMover.update( 0 );
+    mTiles.jumpTo( mMover.getPosition() );
 }
 
 void TilesApp::mouseDown( MouseEvent event )
 {
     mLastMouse = event.getPos();
+//    mTiles.jumpTo( calcMouseOnPlane( mLastMouse ) );
 }
 
 void TilesApp::mouseDrag( MouseEvent event )
 {
-    mTiles.move( event.getPos() - mLastMouse );
-    mLastMouse = event.getPos();
+//    mTiles.move( event.getPos() - mLastMouse );
+//    mLastMouse = event.getPos();
 }
 
 void TilesApp::touchesMoved( TouchEvent event )
 {
-    vec2 mDelta1, mDelta2;
-
-    const vector<TouchEvent::Touch>&touches = event.getTouches();
-    if (touches.size() == 2) {
-        mDelta1 = touches[0].getPos() - touches[0].getPrevPos();
-        mDelta2 = touches[1].getPos() - touches[1].getPrevPos();
-
-        mTiles.move( mDelta1 + mDelta2 / vec2( 2 ) );
-    }
+//    vec2 mDelta1, mDelta2;
+//
+//    const vector<TouchEvent::Touch>&touches = event.getTouches();
+//    if (touches.size() == 2) {
+//        mDelta1 = touches[0].getPos() - touches[0].getPrevPos();
+//        mDelta2 = touches[1].getPos() - touches[1].getPrevPos();
+//
+//        mTiles.move( mDelta1 + mDelta2 / vec2( 2 ) );
+//    }
 }
 
 void TilesApp::update()
 {
     mMover.update( 0 );
-    mTiles.move( mMover.getLastPosition() - mMover.getPosition() );
-    // eyePoint, target, up
-//    mMover.getAngle()
-//mMover.getPosition()
-    mViewCamera.lookAt( vec3( 400, -200, 400 ), vec3( 400, 200, 1), vec3( 0, 0, 1 ) );
+    mTiles.move( mMover.getPosition() );
 }
 
 void TilesApp::draw()
@@ -118,15 +130,10 @@ void TilesApp::draw()
 	gl::clear( Color::gray( 0.5 ) );
     gl::color( Color::white() );
 
+    mTiles.draw();
     {
-        gl::ScopedMatrices matrixScope2;
-//        gl::translate(  );
-//        gl::translate( mMover.getPosition()-mTiles.boardCenter() );
-        mTiles.draw();
-    }
-
-    {
-        gl::ScopedMatrices matrixScope3;
+        gl::ScopedModelMatrix inner;
+        gl::translate( 0, 0, 100 );
         mMover.draw();
     }
 

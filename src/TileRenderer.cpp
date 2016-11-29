@@ -11,8 +11,10 @@
 using namespace ci;
 
 TileRenderer::TileRenderer( const uvec2 &boardSize, const uvec2 &tileSize )
-    : mColumns( boardSize.x ), mRows( boardSize.y ), mOffset( 0 ), mTileSize( tileSize ), mPerlin( 8 )
+    : mColumns( boardSize.x ), mRows( boardSize.y ), mCenteredOn( 0 ), mTileSize( tileSize ), mPerlin( 8 )
 {
+    assert( boardSize.x > 0 && boardSize.y > 0 );
+
     for ( u_int8_t y = 0; y < mRows; ++y ) {
         Row row;
         for ( u_int8_t x = 0; x < mColumns; ++x ) {
@@ -29,12 +31,15 @@ TileRenderer& TileRenderer::operator=( const TileRenderer &rhs )
     mRows = rhs.mRows;
     mTileSize = rhs.mTileSize;
     mPerlin = rhs.mPerlin;
+    mCenteredOn = rhs.mCenteredOn;
+
+    ivec2 cornerPos = mCenteredOn - centerOffset();
 
     mBoard.clear();
     for ( u_int8_t y = 0; y < mRows; ++y ) {
         Row row;
         for ( u_int8_t x = 0; x < mColumns; ++x ) {
-            ivec2 position = ivec2( x, y );
+            ivec2 position = cornerPos + ivec2( x, y );
             row.push_back( Tile::create( position, valueFor( position ) ) );
         }
         mBoard.push_back( row );
@@ -48,43 +53,56 @@ float TileRenderer::valueFor( const ivec2 &position )
     return mPerlin.fBm( ci::vec2( position ) * ci::vec2( 0.1, 0.1 ) );
 }
 
-void TileRenderer::move( ivec2 adjustment ) {
-    int quot;
-    double remain;
+void TileRenderer::jumpTo( const vec2 &p ) {
+    // TODO: if the jump point is on the board it maybe be more efficent to move
+    // there rather than recreating the board.
+    mCenteredOn = tilePosForPoint( p );
+    ivec2 cornerTile = mCenteredOn - centerOffset();
 
-    mOffset += adjustment;
+    mBoard.clear();
+    for ( u_int8_t y = 0; y < mRows; ++y ) {
+        Row row;
+        for ( u_int8_t x = 0; x < mColumns; ++x ) {
+            ivec2 position = cornerTile + ivec2( x, y );
+            row.push_back( Tile::create( position, valueFor( position ) ) );
+        }
+        mBoard.push_back( row );
+    }
+}
 
-    remain = remquo( mOffset.y, mTileSize.y, &quot );
-    while ( quot != 0 ) {
-        mOffset.y = remain;
-        if ( quot > 0 ) {
-            --quot;
+void TileRenderer::move( const vec2 &to ) {
+    ivec2 previousCenter = mCenteredOn;
+    mCenteredOn = tilePosForPoint( to );
+    ivec2 distance = previousCenter - mCenteredOn;
+
+    while ( distance.y != 0 ) {
+        if ( distance.y > 0 ) {
+            --distance.y;
             moveUp();
         } else {
-            ++quot;
+            ++distance.y;
             moveDown();
         }
     }
 
-    remain = remquo( mOffset.x, mTileSize.x, &quot );
-    while ( quot != 0 ) {
-        mOffset.x = remain;
-        if ( quot > 0 ) {
-            --quot;
+    while ( distance.x != 0 ) {
+        if ( distance.x > 0 ) {
+            --distance.x;
             moveRight();
         }
         else {
-            ++quot;
+            ++distance.x;
             moveLeft();
         }
     }
 }
 
 void TileRenderer::moveUp() {
-    TileRef prev = mBoard.front().front();
+    ivec2 cornerPosition = topLeftPosition();
     Row row;
+
     for ( u_int8_t x = 0; x < mColumns; ++x ) {
-        ivec2 pos = prev->position() + ivec2( x, -1 );
+        ivec2 pos = cornerPosition + ivec2( x, -1 );
         row.push_back( Tile::create( pos, valueFor( pos ) ) );
     }
     mBoard.pop_back();
@@ -92,10 +110,11 @@ void TileRenderer::moveUp() {
 }
 
 void TileRenderer::moveDown() {
-    TileRef prev = mBoard.back().front();
+    ivec2 cornerPosition = bottomLeftPosition();
     Row row;
+
     for ( u_int8_t x = 0; x < mColumns; ++x ) {
-        ivec2 pos= prev->position() + ivec2( x, +1 );
+        ivec2 pos = cornerPosition + ivec2( x, +1 );
         row.push_back( Tile::create( pos, valueFor( pos ) ) );
     }
     mBoard.pop_front();
@@ -119,27 +138,18 @@ void TileRenderer::moveLeft() {
 }
 
 void TileRenderer::draw() {
-    gl::ScopedModelMatrix outter;
-
-//    gl::translate( mOffset );
-
-    u_int8_t y = 0;
     for ( const auto& row : mBoard ) {
-        u_int8_t x = 0;
         for ( const auto& tile : row ) {
-            gl::ScopedModelMatrix innner;
-            gl::translate( vec2( mTileSize ) * vec2( x, y ) );
-
             tile->draw( mTileSize );
-
-            x++;
         }
-        y++;
     }
 }
 
-void TileRenderer::Tile::draw( const vec2 &tileSize ) {
+void TileRenderer::Tile::draw( const ivec2 &tileSize ) {
     gl::ScopedColor color( mColor );
-    vec2 halfTile = vec2( tileSize ) / vec2( 2 );
-    gl::drawSolidRect( Rectf( -halfTile, halfTile ) );
+    gl::ScopedModelMatrix innner;
+    gl::translate( vec3( tileSize * position(), value() * 200 ) );
+
+
+    gl::drawSolidRect( Rectf( vec2( 0 ), vec2( tileSize ) ) );
 }
