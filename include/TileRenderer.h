@@ -17,7 +17,7 @@ class TileRenderer {
   public:
 
     class Tile;
-    typedef std::shared_ptr<Tile> TileRef;
+    typedef std::unique_ptr<Tile> TileRef;
 
     typedef std::list<TileRef> Row;
     typedef std::list<Row> Board;

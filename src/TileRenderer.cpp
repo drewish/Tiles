@@ -21,7 +21,7 @@ TileRenderer::TileRenderer( const uvec2 &boardSize, const uvec2 &tileSize )
             ivec2 position = ivec2( x, y );
             row.push_back( Tile::create( position, valueFor( position ) ) );
         }
-        mBoard.push_back( row );
+        mBoard.push_back( std::move( row ) );
     }
 }
 
@@ -42,7 +42,7 @@ TileRenderer& TileRenderer::operator=( const TileRenderer &rhs )
             ivec2 position = cornerPos + ivec2( x, y );
             row.push_back( Tile::create( position, valueFor( position ) ) );
         }
-        mBoard.push_back( row );
+        mBoard.push_back( std::move( row ) );
     }
 
     return *this;
@@ -66,7 +66,7 @@ void TileRenderer::jumpTo( const vec2 &p ) {
             ivec2 position = cornerTile + ivec2( x, y );
             row.push_back( Tile::create( position, valueFor( position ) ) );
         }
-        mBoard.push_back( row );
+        mBoard.push_back( std::move( row ) );
     }
 }
 
@@ -106,7 +106,7 @@ void TileRenderer::moveUp() {
         row.push_back( Tile::create( pos, valueFor( pos ) ) );
     }
     mBoard.pop_back();
-    mBoard.push_front( row );
+    mBoard.push_front( std::move( row ) );
 }
 
 void TileRenderer::moveDown() {
@@ -118,7 +118,7 @@ void TileRenderer::moveDown() {
         row.push_back( Tile::create( pos, valueFor( pos ) ) );
     }
     mBoard.pop_front();
-    mBoard.push_back( row );
+    mBoard.push_back( std::move( row ) );
 }
 
 void TileRenderer::moveRight() {
