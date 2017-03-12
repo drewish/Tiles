@@ -145,7 +145,7 @@ void TileRenderer::draw() {
     }
 }
 
-void TileRenderer::Tile::draw( const ivec2 &tileSize ) {
+void TileRenderer::Tile::draw( const ivec2 &tileSize ) const {
     gl::ScopedColor color( mColor );
     gl::ScopedModelMatrix innner;
     gl::translate( vec3( tileSize * position(), value() * 200 ) );

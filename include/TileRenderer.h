@@ -34,7 +34,7 @@ class TileRenderer {
             mColor = ci::Color( ci::CM_HSV, 0.5 + mValue, 1.0, 1.0 );
         }
 
-        void draw( const ci::ivec2 &tileSize );
+        void draw( const ci::ivec2 &tileSize ) const;
 
         const ci::ivec2&    position() const { return mPosition; }
         const ci::ColorA&   color() const { return mColor; }
