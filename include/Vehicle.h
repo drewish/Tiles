@@ -20,7 +20,7 @@ class TravelPlan {
     void draw() const;
     void update();
 
-    ci::vec2 getStartingPosition() const { return ci::vec2( mPath.front() ); }
+    ci::vec2 getStartingPosition() const { return mPath.front(); }
 
     ci::vec2 getPreviousTarget() const { return mPath[mPrevPoint]; }
     ci::vec2 getCurrentTarget() const { return mPath[mCurrPoint]; }

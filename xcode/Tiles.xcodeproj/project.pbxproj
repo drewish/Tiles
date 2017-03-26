@@ -16,6 +16,7 @@
 		00B784B60FF439BC000DE1D7 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B20FF439BC000DE1D7 /* CoreAudio.framework */; };
 		00B9955A1B128DF400A5C623 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B995581B128DF400A5C623 /* IOKit.framework */; };
 		00B9955B1B128DF400A5C623 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B995591B128DF400A5C623 /* IOSurface.framework */; };
+		4915F76C1E886E910091DBA6 /* Airplane.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4915F76A1E886E910091DBA6 /* Airplane.cpp */; };
 		5323E6B20EAFCA74003A9687 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B10EAFCA74003A9687 /* CoreVideo.framework */; };
 		5F3D71211DB2AD47005E6FB0 /* TileRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5F3D711F1DB2AD47005E6FB0 /* TileRenderer.cpp */; };
 		5F3D71251DB5BFA3005E6FB0 /* Vehicle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5F3D71241DB5BFA3005E6FB0 /* Vehicle.cpp */; };
@@ -42,6 +43,8 @@
 		1BAB0B1FC10E47AABACD6938 /* Resources.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Resources.h; path = ../include/Resources.h; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		4915F76A1E886E910091DBA6 /* Airplane.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Airplane.cpp; path = ../src/Airplane.cpp; sourceTree = "<group>"; };
+		4915F76D1E886ECD0091DBA6 /* Airplane.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Airplane.h; path = ../include/Airplane.h; sourceTree = "<group>"; };
 		49C2E71773634BE9B53BD208 /* TilesApp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = TilesApp.cpp; path = ../src/TilesApp.cpp; sourceTree = "<group>"; usesTabs = 0; };
 		5323E6B10EAFCA74003A9687 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = /System/Library/Frameworks/CoreVideo.framework; sourceTree = "<absolute>"; };
 		5F3D711F1DB2AD47005E6FB0 /* TileRenderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TileRenderer.cpp; path = ../src/TileRenderer.cpp; sourceTree = "<group>"; usesTabs = 0; };
@@ -87,6 +90,7 @@
 			isa = PBXGroup;
 			children = (
 				49C2E71773634BE9B53BD208 /* TilesApp.cpp */,
+				4915F76A1E886E910091DBA6 /* Airplane.cpp */,
 				5F3D711F1DB2AD47005E6FB0 /* TileRenderer.cpp */,
 				5F3D71241DB5BFA3005E6FB0 /* Vehicle.cpp */,
 			);
@@ -147,6 +151,7 @@
 				1BAB0B1FC10E47AABACD6938 /* Resources.h */,
 				5F3D71221DB2B0FA005E6FB0 /* TileRenderer.h */,
 				61553F0E98784BA7B0B8F4D9 /* Tiles_Prefix.pch */,
+				4915F76D1E886ECD0091DBA6 /* Airplane.h */,
 				5F3D71231DB5BF9A005E6FB0 /* Vehicle.h */,
 			);
 			name = Headers;
@@ -240,6 +245,7 @@
 			files = (
 				5F3D71211DB2AD47005E6FB0 /* TileRenderer.cpp in Sources */,
 				5F3D71251DB5BFA3005E6FB0 /* Vehicle.cpp in Sources */,
+				4915F76C1E886E910091DBA6 /* Airplane.cpp in Sources */,
 				7747CAB427FD4E68A08CDCBE /* TilesApp.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

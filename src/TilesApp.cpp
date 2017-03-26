@@ -5,7 +5,7 @@
 #include "cinder/CameraUi.h"
 #include "cinder/params/Params.h"
 #include "TileRenderer.h"
-#include "Vehicle.h"
+#include "Airplane.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -29,8 +29,8 @@ class TilesApp : public App {
     vec2 mTileSize = vec2( 100 );
     ivec2 mBoardSize = ivec2( 7 );
     TileRenderer mTiles;
-    Vehicle mMover;
-    TravelPlan mPlan;
+    Airplane mAirplane;
+    FlightPlan mPlan;
 };
 
 vec2 TilesApp::calcMouseOnPlane( vec2 mouse )
@@ -88,9 +88,9 @@ void TilesApp::setup()
     PolyLine2f circle = polyLineCircle( 300, 8 );
     circle.offset( vec2( 300 ) );
 
-    mPlan = TravelPlan( &mMover, circle );
+    mPlan = FlightPlan( &mAirplane, circle );
 
-    mTiles.jumpTo( mMover.getPosition() );
+    mTiles.jumpTo( vec2( mAirplane.getPosition() ) );
 }
 
 void TilesApp::mouseDown( MouseEvent event )
@@ -122,7 +122,7 @@ void TilesApp::update()
 {
     mPlan.update();
 //    mMover.update( mPlan.computeSteeringForce( mMover.getPosition(), mMover.getVelocity() ) );
-    mTiles.move( mMover.getPosition() );
+    mTiles.move( vec2( mAirplane.getPosition() ) );
 }
 
 void TilesApp::draw()
@@ -138,7 +138,7 @@ void TilesApp::draw()
         gl::ScopedModelMatrix inner;
         gl::translate( 0, 0, 100 );
         mPlan.draw();
-        mMover.draw();
+        mAirplane.draw();
     }
 
     mParams->draw();
