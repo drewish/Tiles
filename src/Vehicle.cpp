@@ -32,7 +32,7 @@ vec2 truncate( vec2 v, float s )
 }
 
 
-FlightPlan::FlightPlan( Vehicle *vehicle, const ci::PolyLine2f &path )
+TravelPlan::TravelPlan( Vehicle *vehicle, const ci::PolyLine2f &path )
     : mVehicle( vehicle )
 {
     mPath = path.getPoints();
@@ -56,7 +56,7 @@ FlightPlan::FlightPlan( Vehicle *vehicle, const ci::PolyLine2f &path )
     }
 };
 
-void FlightPlan::update()
+void TravelPlan::update()
 {
     if( mVehicle ) {
         mVehicle->update( computeSteeringForce( mVehicle->getPosition(), mVehicle->getVelocity() ) );
@@ -65,7 +65,7 @@ void FlightPlan::update()
 
 // All this is based of Reynold's steering behaviors
 // http://www.red3d.com/cwr/steer/gdc99/
-vec2 FlightPlan::computeSteeringForce( const ci::vec2 &position, const ci::vec2 &velocity )
+vec2 TravelPlan::computeSteeringForce( const ci::vec2 &position, const ci::vec2 &velocity )
 {
     if( mPath.size() < 2 ) return vec2( 0 );
 
@@ -121,7 +121,7 @@ void findRadius( float turnDistance, const vec2 &v1, const vec2 &v2, const vec2 
     center = v2 + vec2( std::cos( middleAngle ), std::sin( middleAngle ) ) * h;
 }
 
-void FlightPlan::moveToNextSegment()
+void TravelPlan::moveToNextSegment()
 {
     mPrevPoint = mCurrPoint;
     mCurrPoint = mNextPoint;
@@ -149,14 +149,14 @@ void FlightPlan::moveToNextSegment()
     mSlowingDistance = calcSlowingDistance();
 }
 
-float FlightPlan::calcSlowingDistance()
+float TravelPlan::calcSlowingDistance()
 {
     float max_accel = mMaxForce / mVehicle->getMass();
     float fudge_factor = 1.1;
     return fudge_factor * std::abs( mMaxSpeed * mMaxSpeed - mNextTurnSpeed * mNextTurnSpeed ) / ( 2.0 * max_accel );
 }
 
-void FlightPlan::draw() const
+void TravelPlan::draw() const
 {
     if( true ) {
         gl::draw( mPath );
@@ -169,7 +169,7 @@ void FlightPlan::draw() const
     }
 
     // Text debugging info
-    if( /* DISABLES CODE */ (false) ) {
+    if( true ) {
         gl::ScopedMatrices mat;
         gl::setMatricesWindow( cinder::app::getWindowSize() );
         boost::format formatter( "%07.5f" );
@@ -191,10 +191,6 @@ void Vehicle::setup( const vec2 &position )
 
     // Load the model in so we have something to draw
     ObjLoader loader( app::loadResource( RES_CAR_01_OBJ ) );
-    std::cout << "has groups: " << loader.getNumGroups() << "\n";
-    for ( const ObjLoader::Group &group : loader.getGroups() ) {
-        std::cout << "name: " << group.mName << "\n";
-    }
     TriMeshRef mesh = TriMesh::create( loader );
     if( ! loader.getAvailableAttribs().count( geom::NORMAL ) ) mesh->recalculateNormals();
     mBatch = gl::Batch::create( *mesh, gl::getStockShader( gl::ShaderDef().color() ) );

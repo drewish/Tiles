@@ -12,9 +12,9 @@ class Vehicle;
 
 // TODO:
 // - only closed polylines should loop
-class FlightPlan {
+class TravelPlan {
   public:
-    FlightPlan( Vehicle *vehicle = nullptr, const ci::PolyLine2f &path = {} );
+    TravelPlan( Vehicle *vehicle = nullptr, const ci::PolyLine2f &path = {} );
 
     void setup( const ci::PolyLine2f &path );
     void draw() const;

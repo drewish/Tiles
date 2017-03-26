@@ -30,7 +30,7 @@ class TilesApp : public App {
     ivec2 mBoardSize = ivec2( 7 );
     TileRenderer mTiles;
     Vehicle mMover;
-    FlightPlan mPlan;
+    TravelPlan mPlan;
 };
 
 vec2 TilesApp::calcMouseOnPlane( vec2 mouse )
@@ -88,7 +88,7 @@ void TilesApp::setup()
     PolyLine2f circle = polyLineCircle( 300, 8 );
     circle.offset( vec2( 300 ) );
 
-    mPlan = FlightPlan( &mMover, circle );
+    mPlan = TravelPlan( &mMover, circle );
 
     mTiles.jumpTo( mMover.getPosition() );
 }
