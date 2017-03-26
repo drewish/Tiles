@@ -23,38 +23,54 @@ using namespace ci;
 #include "Resources.h"
 #include "cinder/ObjLoader.h"
 
-void Vehicle::setup( const PolyLine2f &path )
+
+vec2 truncate( vec2 v, float s )
+{
+    if( glm::length2( v ) >  s * s )
+        return glm::normalize( v ) * s;
+    return v;
+}
+
+void FlightPlan::setup( const PolyLine2f &path, float mass )
 {
     mPath = path;
+    mMaxSpeed = 4;
+    mMaxForce = 0.5;
+    mMass = mass;
+
     // If it's closed and the front and back aren't the same point add it
     // to close it up.
     if( path.isClosed() && glm::distance2( mPath.getPoints().front(), mPath.getPoints().back() ) > 0.001 ) {
         mPath.getPoints().push_back( mPath.getPoints().front() );
     }
-    mAngle = 0;
-
-    mPosition = vec2( mPath.getPoints().front() );
-    mLastPosition = mPosition;
-    mVelocity = vec2( 0 );
-    mMaxSpeed = 4;
-    mMaxForce = 0.5;
-    mMass = 5;
 
     mPrevPoint = mPath.size() > 1 ? mPath.size() - 1 : 0;
     mCurrPoint = 0;
     mNextPoint = mPath.size() > 1 ? 1 : 0;
     moveToNextSegment();
+}
 
+vec2 FlightPlan::computeSteeringForce( const ci::vec2 &position, const ci::vec2 &velocity )
+{
+    if( mPath.size() < 2 ) return vec2( 0 );
 
-    // Load the model in so we have something to draw
-    ObjLoader loader( app::loadResource( RES_CAR_01_OBJ ) );
-    std::cout << "has groups: " << loader.getNumGroups() << "\n";
-    for ( const ObjLoader::Group &group : loader.getGroups() ) {
-        std::cout << "name: " << group.mName << "\n";
+    vec2 target = mPath.getPoints()[mCurrPoint];
+
+    // steer to arrive at next point
+    vec2 target_offset = target - position;
+    float distance = glm::length( target_offset );
+    float ramped_speed = mNextTurnSpeed * ( distance / mSlowingDistance );
+    float clipped_speed = std::min( ramped_speed, mMaxSpeed );
+    vec2 desired_velocity = ( clipped_speed / distance ) * target_offset;
+    vec2 steering_direction = desired_velocity - velocity;
+    vec2 steering_force = truncate( steering_direction, mMaxForce );
+
+    // When we get close to the target, shift to the next point
+    if( distance < mNextTurnRadius && glm::length2( velocity ) < ( mNextTurnSpeed * mNextTurnSpeed ) ) {
+        moveToNextSegment();
     }
-    TriMeshRef mesh = TriMesh::create( loader );
-    if( ! loader.getAvailableAttribs().count( geom::NORMAL ) ) mesh->recalculateNormals();
-    mBatch = gl::Batch::create( *mesh, gl::getStockShader( gl::ShaderDef().color() ) );
+
+    return steering_force;
 }
 
 void findRadius( float turnDistance, const vec2 &v1, const vec2 &v2, const vec2 &v3, float &r, vec2 &center )
@@ -92,7 +108,7 @@ void findRadius( float turnDistance, const vec2 &v1, const vec2 &v2, const vec2 
     center = v2 + vec2( std::cos( middleAngle ), std::sin( middleAngle ) ) * h;
 }
 
-void Vehicle::moveToNextSegment()
+void FlightPlan::moveToNextSegment()
 {
     mPrevPoint = mCurrPoint;
     mCurrPoint = mNextPoint;
@@ -122,76 +138,15 @@ void Vehicle::moveToNextSegment()
     mSlowingDistance = calcSlowingDistance();
 }
 
-float Vehicle::calcSlowingDistance()
+float FlightPlan::calcSlowingDistance()
 {
     float max_accel = mMaxForce / mMass;
     float fudge_factor = 1.1;
     return fudge_factor * std::abs( mMaxSpeed * mMaxSpeed - mNextTurnSpeed * mNextTurnSpeed ) / ( 2.0 * max_accel );
 }
 
-vec2 Vehicle::truncate( vec2 v, float s )
+void FlightPlan::draw() const
 {
-    if( glm::length2( v ) >  s * s )
-        return glm::normalize( v ) * s;
-    return v;
-}
-
-// All this is based of Reynold's steering behaviors
-// http://www.red3d.com/cwr/steer/gdc99/
-void Vehicle::update( double dt )
-{
-    if( mPath.size() < 2 ) return;
-
-    vec2 target = mPath.getPoints()[mCurrPoint];
-
-    // steer to arrive at next point
-    vec2 target_offset = target - mPosition;
-    float distance = glm::length( target_offset );
-    float ramped_speed = mNextTurnSpeed * ( distance / mSlowingDistance );
-    float clipped_speed = std::min( ramped_speed, mMaxSpeed );
-    vec2 desired_velocity = ( clipped_speed / distance ) * target_offset;
-    vec2 steering_direction = desired_velocity - mVelocity;
-    vec2 steering_force = truncate( steering_direction, mMaxForce );
-
-    vec2 acceleration = steering_force / mMass;
-    mVelocity = truncate( mVelocity + acceleration, mMaxSpeed );
-    mLastPosition = mPosition;
-    mPosition = mPosition + mVelocity;
-
-    if( ramped_speed < mMaxSpeed )
-        mColor = Color( 1, 0, 0 );
-//    else if( accelerating? )
-//        mColor = Color( 0, 1, 0 );
-    else
-        mColor = Color::white();
-
-    // When we get close move to the next point
-    if( distance < mNextTurnRadius && glm::length2( mVelocity ) < ( mNextTurnSpeed * mNextTurnSpeed ) ) {
-        moveToNextSegment();
-    }
-}
-
-void Vehicle::draw() const
-{
-    gl::ScopedColor color( mColor );
-
-    {
-        gl::ScopedModelMatrix matrix;
-
-        gl::translate( getPosition() );
-        gl::rotate( getAngle(), vec3( 0, 0, 1 ) );
-        // Drawing a vector can help understand the heading.
-        // gl::drawVector( vec3( 0, 0, 0 ), vec3( 10, 0, 0 ), 20, 10);
-
-        // For what ever reason we have to do some rotating to get the model
-        // facing the right direction.
-        gl::rotate( 1.571, vec3( 1, 0, 0 ) );
-        gl::rotate( 1.571, vec3( 0, 1, 0 ) );
-        gl::scale( vec3( 10 ) );
-
-        mBatch->draw();
-    }
-
     if( true ) {
         gl::draw( mPath );
     }
@@ -209,9 +164,76 @@ void Vehicle::draw() const
         gl::setMatricesWindow( cinder::app::getWindowSize() );
         boost::format formatter( "%07.5f" );
         Color color = Color::black();
-        gl::drawString( "Speed: " + (formatter % glm::length(mVelocity)).str(), vec2( 10, 10 ), color );
         gl::drawString( "Turn:  " + (formatter % mNextTurnSpeed).str(), vec2( 10, 25 ), color );
         gl::drawString( "Max:   " + (formatter % mMaxSpeed).str(), vec2( 10, 40 ), color );
         gl::drawString( "Dist:  " + (formatter % mSlowingDistance).str(), vec2( 10, 55 ), color );
     }
+}
+
+
+void Vehicle::setup( const PolyLine2f &path )
+{
+    mAngle = 0;
+    mVelocity = vec2( 0 );
+    mMass = 5;
+
+    mPlan.setup( path, mMass );
+
+    mPosition = mPlan.getStartingPosition();
+    mLastPosition = mPosition;
+
+
+    // Load the model in so we have something to draw
+    ObjLoader loader( app::loadResource( RES_CAR_01_OBJ ) );
+    std::cout << "has groups: " << loader.getNumGroups() << "\n";
+    for ( const ObjLoader::Group &group : loader.getGroups() ) {
+        std::cout << "name: " << group.mName << "\n";
+    }
+    TriMeshRef mesh = TriMesh::create( loader );
+    if( ! loader.getAvailableAttribs().count( geom::NORMAL ) ) mesh->recalculateNormals();
+    mBatch = gl::Batch::create( *mesh, gl::getStockShader( gl::ShaderDef().color() ) );
+}
+
+// All this is based of Reynold's steering behaviors
+// http://www.red3d.com/cwr/steer/gdc99/
+void Vehicle::update( double dt )
+{
+    vec2 steering_force = mPlan.computeSteeringForce( mPosition, mVelocity );
+
+    vec2 acceleration = steering_force / mMass;
+    mVelocity = truncate( mVelocity + acceleration, mPlan.mMaxSpeed );
+    mLastPosition = mPosition;
+    mPosition = mPosition + mVelocity;
+
+//    if( ramped_speed < plan.mMaxSpeed )
+//        mColor = Color( 1, 0, 0 );
+////    else if( accelerating? )
+////        mColor = Color( 0, 1, 0 );
+//    else
+        mColor = Color::white();
+
+}
+
+void Vehicle::draw() const
+{
+    gl::ScopedColor color( mColor );
+
+    {
+        gl::ScopedModelMatrix matrix;
+
+        gl::translate( getPosition() );
+        gl::rotate( getAngle(), vec3( 0, 0, 1 ) );
+        // Drawing a vector can help understand the heading.
+//        gl::drawVector( vec3( 0, 0, 0 ), vec3( 10, 0, 0 ), 20, 10);
+
+        // For what ever reason we have to do some rotating to get the model
+        // facing the right direction.
+        gl::rotate( 1.571, vec3( 1, 0, 0 ) );
+        gl::rotate( 1.571, vec3( 0, 1, 0 ) );
+        gl::scale( vec3( 10 ) );
+
+        mBatch->draw();
+    }
+
+    mPlan.draw();
 }

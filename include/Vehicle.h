@@ -8,6 +8,33 @@
 
 #pragma once
 
+
+class FlightPlan {
+  public:
+    void setup( const ci::PolyLine2f &path, float mass );
+	void draw() const;
+
+	ci::vec2 getStartingPosition() { return ci::vec2( mPath.getPoints().front() ); }
+	ci::vec2 computeSteeringForce( const ci::vec2 &position, const ci::vec2 &velocity );
+
+    void moveToNextSegment();
+    float calcSlowingDistance();
+
+    ci::PolyLine2f mPath;
+    size_t mPrevPoint;
+    size_t mCurrPoint;
+    size_t mNextPoint;
+
+    const float mTurnDistance = 10;
+    float mNextTurnRadius;
+    float mNextTurnSpeed;
+    float mSlowingDistance;
+
+    float mMaxSpeed;
+    float mMaxForce;
+    float mMass;
+};
+
 // TODO:
 // - interpolate the rotation angle turning
 // - only closed polylines should loop 
@@ -34,31 +61,16 @@ class Vehicle {
         return mAngle;
     }
 
-    void moveToNextSegment();
-    float calcSlowingDistance();
-    ci::vec2 truncate( ci::vec2 v, float s );
 
   protected:
-    const float mTurnDistance = 10;
-
-    float mMaxSpeed;
-    float mMaxForce;
-
-    ci::PolyLine2f mPath;
-    size_t mPrevPoint;
-    size_t mCurrPoint;
-    size_t mNextPoint;
-
     ci::Color mColor;
-    ci::vec2 mPosition;
+    ci::vec2 mPosition; // of the center of gravity?
     ci::vec2 mLastPosition;
     ci::vec2 mVelocity;
     float mMass;
     mutable float mAngle;
-    float mNextTurnRadius;
-    float mNextTurnSpeed;
-    float mSlowingDistance;
 
+	FlightPlan mPlan;
     ci::gl::BatchRef mBatch;
     ci::Sphere mBoundingSphere;
 };
