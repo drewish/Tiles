@@ -30,6 +30,7 @@ class TilesApp : public App {
     ivec2 mBoardSize = ivec2( 7 );
     TileRenderer mTiles;
     Vehicle mMover;
+    FlightPlan mPlan;
 };
 
 vec2 TilesApp::calcMouseOnPlane( vec2 mouse )
@@ -86,8 +87,9 @@ void TilesApp::setup()
 
     PolyLine2f circle = polyLineCircle( 300, 8 );
     circle.offset( vec2( 300 ) );
-    mMover.setup( circle );
-    mMover.update( 0 );
+
+    mPlan = FlightPlan( &mMover, circle );
+
     mTiles.jumpTo( mMover.getPosition() );
 }
 
@@ -118,7 +120,8 @@ void TilesApp::touchesMoved( TouchEvent event )
 
 void TilesApp::update()
 {
-    mMover.update( 0 );
+    mPlan.update();
+//    mMover.update( mPlan.computeSteeringForce( mMover.getPosition(), mMover.getVelocity() ) );
     mTiles.move( mMover.getPosition() );
 }
 
@@ -134,6 +137,7 @@ void TilesApp::draw()
     {
         gl::ScopedModelMatrix inner;
         gl::translate( 0, 0, 100 );
+        mPlan.draw();
         mMover.draw();
     }
 

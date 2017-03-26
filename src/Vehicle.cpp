@@ -31,33 +31,46 @@ vec2 truncate( vec2 v, float s )
     return v;
 }
 
-void FlightPlan::setup( const PolyLine2f &path, float mass )
+
+FlightPlan::FlightPlan( Vehicle *vehicle, const ci::PolyLine2f &path )
+    : mVehicle( vehicle )
 {
-    mPath = path;
+    mPath = path.getPoints();
+    isPathClosed = path.isClosed();
     mMaxSpeed = 4;
     mMaxForce = 0.5;
-    mMass = mass;
 
     // If it's closed and the front and back aren't the same point add it
     // to close it up.
-    if( path.isClosed() && glm::distance2( mPath.getPoints().front(), mPath.getPoints().back() ) > 0.001 ) {
-        mPath.getPoints().push_back( mPath.getPoints().front() );
+    if( path.isClosed() && glm::distance2( mPath.front(), mPath.back() ) > 0.001 ) {
+        mPath.push_back( mPath.front() );
     }
 
     mPrevPoint = mPath.size() > 1 ? mPath.size() - 1 : 0;
     mCurrPoint = 0;
     mNextPoint = mPath.size() > 1 ? 1 : 0;
-    moveToNextSegment();
+
+    if( mVehicle ) {
+        moveToNextSegment();
+        mVehicle->setup( getStartingPosition() );
+    }
+};
+
+void FlightPlan::update()
+{
+    if( mVehicle ) {
+        mVehicle->update( computeSteeringForce( mVehicle->getPosition(), mVehicle->getVelocity() ) );
+    }
 }
 
+// All this is based of Reynold's steering behaviors
+// http://www.red3d.com/cwr/steer/gdc99/
 vec2 FlightPlan::computeSteeringForce( const ci::vec2 &position, const ci::vec2 &velocity )
 {
     if( mPath.size() < 2 ) return vec2( 0 );
 
-    vec2 target = mPath.getPoints()[mCurrPoint];
-
     // steer to arrive at next point
-    vec2 target_offset = target - position;
+    vec2 target_offset = getCurrentTarget() - position;
     float distance = glm::length( target_offset );
     float ramped_speed = mNextTurnSpeed * ( distance / mSlowingDistance );
     float clipped_speed = std::min( ramped_speed, mMaxSpeed );
@@ -84,7 +97,7 @@ void findRadius( float turnDistance, const vec2 &v1, const vec2 &v2, const vec2 
     // point d distance away.
     /*
                      d
-           prev <--+----+
+           prev <--+----+ target
                    |  θ/ \
                   r|  /   \
                    | /h    v
@@ -114,14 +127,12 @@ void FlightPlan::moveToNextSegment()
     mCurrPoint = mNextPoint;
     ++mNextPoint;
 
-    if( mNextPoint > mPath.size() - ( mPath.isClosed() ? 2 : 1 ) ) {
+    if( mNextPoint > mPath.size() - ( isPathClosed ? 2 : 1 ) ) {
         mNextPoint = 0;
     }
 
-    std::vector<vec2> &points = mPath.getPoints();
-
-    vec2 p = glm::normalize( points[mCurrPoint] - points[mPrevPoint] );
-    vec2 n = glm::normalize( points[mNextPoint] - points[mCurrPoint] );
+    vec2 p = glm::normalize( mPath[mCurrPoint] - mPath[mPrevPoint] );
+    vec2 n = glm::normalize( mPath[mNextPoint] - mPath[mCurrPoint] );
     float diff = glm::angle( n, p );
     // TODO: Come up with a more gradual way of handling this
     if( diff <= M_PI_4 + 0.1 ) {
@@ -133,14 +144,14 @@ void FlightPlan::moveToNextSegment()
     }
 
     vec2 _center;
-    findRadius( mTurnDistance, points[mPrevPoint], points[mCurrPoint], points[mNextPoint], mNextTurnRadius, _center );
+    findRadius( mTurnDistance, mPath[mPrevPoint], mPath[mCurrPoint], mPath[mNextPoint], mNextTurnRadius, _center );
 
     mSlowingDistance = calcSlowingDistance();
 }
 
 float FlightPlan::calcSlowingDistance()
 {
-    float max_accel = mMaxForce / mMass;
+    float max_accel = mMaxForce / mVehicle->getMass();
     float fudge_factor = 1.1;
     return fudge_factor * std::abs( mMaxSpeed * mMaxSpeed - mNextTurnSpeed * mNextTurnSpeed ) / ( 2.0 * max_accel );
 }
@@ -154,8 +165,7 @@ void FlightPlan::draw() const
     // Slowing boundary
     if( true ) {
         gl::ScopedColor color( 1, 0, 0 );
-        const std::vector<vec2> &points = mPath.getPoints();
-        gl::drawStrokedCircle( points[mCurrPoint], 2 * mSlowingDistance );
+        gl::drawStrokedCircle( getCurrentTarget(), 2 * mSlowingDistance );
     }
 
     // Text debugging info
@@ -171,17 +181,13 @@ void FlightPlan::draw() const
 }
 
 
-void Vehicle::setup( const PolyLine2f &path )
+void Vehicle::setup( const vec2 &position )
 {
     mAngle = 0;
     mVelocity = vec2( 0 );
-    mMass = 5;
 
-    mPlan.setup( path, mMass );
-
-    mPosition = mPlan.getStartingPosition();
+    mPosition = position;
     mLastPosition = mPosition;
-
 
     // Load the model in so we have something to draw
     ObjLoader loader( app::loadResource( RES_CAR_01_OBJ ) );
@@ -192,48 +198,33 @@ void Vehicle::setup( const PolyLine2f &path )
     TriMeshRef mesh = TriMesh::create( loader );
     if( ! loader.getAvailableAttribs().count( geom::NORMAL ) ) mesh->recalculateNormals();
     mBatch = gl::Batch::create( *mesh, gl::getStockShader( gl::ShaderDef().color() ) );
+
+    mColor = Color::white();
 }
 
-// All this is based of Reynold's steering behaviors
-// http://www.red3d.com/cwr/steer/gdc99/
-void Vehicle::update( double dt )
+void Vehicle::update( const vec2 &steeringForce )
 {
-    vec2 steering_force = mPlan.computeSteeringForce( mPosition, mVelocity );
-
-    vec2 acceleration = steering_force / mMass;
-    mVelocity = truncate( mVelocity + acceleration, mPlan.mMaxSpeed );
+    vec2 acceleration = steeringForce / mMass;
+    mVelocity = mVelocity + acceleration;
     mLastPosition = mPosition;
     mPosition = mPosition + mVelocity;
-
-//    if( ramped_speed < plan.mMaxSpeed )
-//        mColor = Color( 1, 0, 0 );
-////    else if( accelerating? )
-////        mColor = Color( 0, 1, 0 );
-//    else
-        mColor = Color::white();
-
 }
 
 void Vehicle::draw() const
 {
     gl::ScopedColor color( mColor );
+    gl::ScopedModelMatrix matrix;
 
-    {
-        gl::ScopedModelMatrix matrix;
+    gl::translate( getPosition() );
+    gl::rotate( getAngle(), vec3( 0, 0, 1 ) );
+    // Drawing a vector can help understand the heading.
+//    gl::drawVector( vec3( 0, 0, 0 ), vec3( 10, 0, 0 ), 20, 10);
 
-        gl::translate( getPosition() );
-        gl::rotate( getAngle(), vec3( 0, 0, 1 ) );
-        // Drawing a vector can help understand the heading.
-//        gl::drawVector( vec3( 0, 0, 0 ), vec3( 10, 0, 0 ), 20, 10);
+    // For what ever reason we have to do some rotating to get the model
+    // facing the right direction.
+    gl::rotate( 1.571, vec3( 1, 0, 0 ) );
+    gl::rotate( 1.571, vec3( 0, 1, 0 ) );
+    gl::scale( vec3( 10 ) );
 
-        // For what ever reason we have to do some rotating to get the model
-        // facing the right direction.
-        gl::rotate( 1.571, vec3( 1, 0, 0 ) );
-        gl::rotate( 1.571, vec3( 0, 1, 0 ) );
-        gl::scale( vec3( 10 ) );
-
-        mBatch->draw();
-    }
-
-    mPlan.draw();
+    mBatch->draw();
 }

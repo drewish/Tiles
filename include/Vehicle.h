@@ -8,50 +8,61 @@
 
 #pragma once
 
+class Vehicle;
 
+// TODO:
+// - only closed polylines should loop
 class FlightPlan {
   public:
-    void setup( const ci::PolyLine2f &path, float mass );
-	void draw() const;
+    FlightPlan( Vehicle *vehicle = nullptr, const ci::PolyLine2f &path = {} );
 
-	ci::vec2 getStartingPosition() { return ci::vec2( mPath.getPoints().front() ); }
-	ci::vec2 computeSteeringForce( const ci::vec2 &position, const ci::vec2 &velocity );
+    void setup( const ci::PolyLine2f &path );
+    void draw() const;
+    void update();
+
+    ci::vec2 getStartingPosition() const { return ci::vec2( mPath.front() ); }
+
+    ci::vec2 getPreviousTarget() const { return mPath[mPrevPoint]; }
+    ci::vec2 getCurrentTarget() const { return mPath[mCurrPoint]; }
+    ci::vec2 getNextTarget() const { return mPath[mNextPoint]; }
+
+    ci::vec2 computeSteeringForce( const ci::vec2 &position, const ci::vec2 &velocity );
 
     void moveToNextSegment();
     float calcSlowingDistance();
 
-    ci::PolyLine2f mPath;
+  protected:
+    Vehicle *mVehicle;
+    std::vector<ci::vec2> mPath;
+    bool isPathClosed;
     size_t mPrevPoint;
     size_t mCurrPoint;
     size_t mNextPoint;
 
-    const float mTurnDistance = 10;
+    float mTurnDistance = 10;
     float mNextTurnRadius;
     float mNextTurnSpeed;
     float mSlowingDistance;
 
     float mMaxSpeed;
     float mMaxForce;
-    float mMass;
 };
 
 // TODO:
 // - interpolate the rotation angle turning
-// - only closed polylines should loop 
-// - move this to its own files
 // - draw a custom shape to indicate direction
-// - build path from highways in city
-// - use instanced drawing
-// - move into the citydata structure
 class Vehicle {
   public:
+    Vehicle( float mass = 1 ) : mMass( mass ) {};
 
-    void setup( const ci::PolyLine2f &path );
-    void update( double dt );
+    void setup( const ci::vec2 &position );
+    void update( const ci::vec2 &steeringForce );
     void draw() const;
 
     ci::vec2 getPosition() const { return mPosition; }
     ci::vec2 getLastPosition() const { return mLastPosition; }
+    ci::vec2 getVelocity() const { return mVelocity; }
+
 
     float getAngle() const
     {
@@ -60,6 +71,7 @@ class Vehicle {
         }
         return mAngle;
     }
+    float getMass() const { return mMass; }
 
 
   protected:
@@ -70,7 +82,6 @@ class Vehicle {
     float mMass;
     mutable float mAngle;
 
-	FlightPlan mPlan;
     ci::gl::BatchRef mBatch;
     ci::Sphere mBoundingSphere;
 };
