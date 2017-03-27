@@ -82,11 +82,10 @@ void TilesApp::setup()
     mViewCamera.setPerspective( 80.0f, getWindowAspectRatio(), 10.0f, 4000.0f );
     // eyePoint, target, up
     mViewCamera.lookAt( vec3( 200, -200, 400 ), vec3( 0, 0, 0 ), vec3( 0, 0, 1 ) );
-    mViewCameraUI = CameraUi( &mViewCamera, getWindow() );
-//    mViewCameraUI.setMouseWheelMultiplier( 1 );
+// disconnected to allow camera to follow plane
+//    mViewCameraUI = CameraUi( &mViewCamera, getWindow() );
 
-    PolyLine2f circle = polyLineCircle( 300, 8 );
-    circle.offset( vec2( 300 ) );
+    PolyLine2f circle = polyLineCircle( 300, 8 ).getOffset( vec2( 300 ) );
 
     mPlan = FlightPlan( &mAirplane, circle );
 
@@ -121,8 +120,12 @@ void TilesApp::touchesMoved( TouchEvent event )
 void TilesApp::update()
 {
     mPlan.update();
-//    mMover.update( mPlan.computeSteeringForce( mMover.getPosition(), mMover.getVelocity() ) );
     mTiles.move( vec2( mAirplane.getPosition() ) );
+
+// TODO: should eventually move into the model
+    vec3 heading = glm::normalize( mAirplane.getLastPosition() - mAirplane.getPosition() );
+    vec3 from = mAirplane.getPosition() + ( heading * vec3( 300 ) ) + vec3( 0, 0, 200 );
+    mViewCamera.lookAt( from, mAirplane.getPosition(), vec3( 0, 0, 1 ) );
 }
 
 void TilesApp::draw()
